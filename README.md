@@ -1,2 +1,5 @@
 # pong
-simple pong game.
+A Simple Pong Game with Python.
+
+### Used Packages
+- pip install ursina
