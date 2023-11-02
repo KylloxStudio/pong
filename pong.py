@@ -3,7 +3,6 @@ from ursina import *
 app = Ursina()
 
 window.color = color.black
-window.borderless = False
 camera.orthographic = True
 camera.fov = 1
 
