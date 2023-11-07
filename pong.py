@@ -3,6 +3,8 @@ from ursina import *
 app = Ursina()
 
 window.color = color.black
+window.fps_counter.enabled = False
+window.exit_button.visible = False
 camera.orthographic = True
 camera.fov = 1
 
@@ -14,8 +16,9 @@ ceiling = duplicate(floor, y=.5, rotation_z=180, visible=False)
 left_wall = duplicate(floor, x=-.5*window.aspect_ratio, rotation_z=90, visible=True)
 right_wall = duplicate(floor, x=.5*window.aspect_ratio, rotation_z=-90, visible=True)
 
-collision_cooldown = .05
+collision_cooldown = .15
 ball = Entity(model='circle', scale=.05, collider='box', speed=0, collision_cooldown=collision_cooldown)
+ball.velocity = 0
 
 isGameOver = True
 info_text = Text("press space to play", origin=(-.25,15))
@@ -39,16 +42,18 @@ def update():
 
     hit_info = ball.intersects()
     if hit_info.hit:
-        ball.collision_cooldown = collision_cooldown
         if hit_info.entity in (left_paddle, right_paddle, left_wall, right_wall):
+            ball.collision_cooldown = collision_cooldown
             # hit_info.entity.collision = False
             invoke(setattr, hit_info.entity, 'collision', False, delay=.1)
-            direction_multiplier = 1
             if hit_info.entity == left_paddle:
+                ball.velocity = 1
                 direction_multiplier = -1
                 left_paddle.collision = False # disable collision for the current paddle so it doesn't collide twice in a row
                 right_paddle.collision = True
             elif hit_info.entity == right_paddle:
+                ball.velocity = -1
+                direction_multiplier = 1
                 right_paddle.collision = False
                 left_paddle.collision = True
             elif hit_info.entity == right_wall:
@@ -61,9 +66,15 @@ def update():
             if hit_info.entity != right_wall and hit_info.entity != left_wall:
                 ball.rotation_z += 180 * direction_multiplier
                 ball.rotation_z -= (hit_info.entity.world_y - ball.y) * 20 * 32 * direction_multiplier
-                ball.speed *= 1.2
+                ball.speed *= 1.1
         else: # hit up/down wall
-            ball.rotation_z *= -abs(hit_info.world_normal.normalized()[1])
+            ball.speed *= 1.05
+            if hit_info.world_normal.normalized()[1] == 0:
+                ball.position.y -= 1
+                ball.rotation_z += 180 * ball.velocity
+                # ball.rotation_z -= (hit_info.entity.world_y - ball.y) * 20 * 32 * (-ball.velocity)
+            else: 
+                ball.rotation_z *= -abs(hit_info.world_normal.normalized()[1])
 
         # create a particle on collision
         particle = Entity(model='quad', position=hit_info.world_point, scale=0, texture='circle', add_to_scene_entities=False)
@@ -77,7 +88,8 @@ def reset():
     info_text.enabled = False
     ball.position = (0,0,0)
     ball.rotation = (0,0,0)
-    ball.speed = 20
+    ball.speed = 0
+    ball.velocity = -1
     for paddle in (left_paddle, right_paddle):
         paddle.collision = True
         paddle.y = 0
@@ -89,6 +101,7 @@ def input(key):
     global isGameOver
     if key == 'space' and isGameOver:
         reset()
+        ball.speed = 15
 
     if key == 't':
         ball.speed += 5
