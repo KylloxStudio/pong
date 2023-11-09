@@ -44,17 +44,17 @@ def update():
     if hit_info.hit:
         if hit_info.entity in (left_paddle, right_paddle, left_wall, right_wall):
             ball.collision_cooldown = collision_cooldown
-            # hit_info.entity.collision = False
+            hit_info.entity.collision = False
             invoke(setattr, hit_info.entity, 'collision', False, delay=.1)
             if hit_info.entity == left_paddle:
                 ball.velocity = 1
                 direction_multiplier = -1
-                left_paddle.collision = False # disable collision for the current paddle so it doesn't collide twice in a row
+                left_paddle.collision = True # disable collision for the current paddle so it doesn't collide twice in a row
                 right_paddle.collision = True
             elif hit_info.entity == right_paddle:
                 ball.velocity = -1
                 direction_multiplier = 1
-                right_paddle.collision = False
+                right_paddle.collision = True
                 left_paddle.collision = True
             elif hit_info.entity == right_wall:
                 info_text = Text("player A win. press space to restart", origin=(-.25,15))
@@ -65,15 +65,18 @@ def update():
 
             if hit_info.entity != right_wall and hit_info.entity != left_wall:
                 ball.rotation_z += 180 * direction_multiplier
+                # print((hit_info.entity.world_y - ball.y) * 20 * 32 * direction_multiplier)
                 ball.rotation_z -= (hit_info.entity.world_y - ball.y) * 20 * 32 * direction_multiplier
                 ball.speed *= 1.1
         else: # hit up/down wall
             ball.speed *= 1.05
             if hit_info.world_normal.normalized()[1] == 0:
-                ball.position.y -= 1
-                ball.rotation_z += 180 * ball.velocity
-                # ball.rotation_z -= (hit_info.entity.world_y - ball.y) * 20 * 32 * (-ball.velocity)
-            else: 
+                if ball.position.y < 0:
+                    ball.position.y += 2.1
+                else:
+                    ball.position.y -= 2.1
+                ball.rotation_z *= -abs(ball.velocity)
+            else:
                 ball.rotation_z *= -abs(hit_info.world_normal.normalized()[1])
 
         # create a particle on collision
