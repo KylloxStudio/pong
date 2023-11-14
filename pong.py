@@ -1,4 +1,5 @@
 from ursina import *
+import random
 
 app = Ursina()
 
@@ -22,8 +23,8 @@ ball = Entity(model='circle', scale=.05, collider='box', speed=0, velocity=0, co
 isGameOver = True
 right_isUsingSkill = False
 left_isUsingSkill = False
-right_skillCool = 5.0
-left_skillCool = 5.0
+right_skillCool = 2.0
+left_skillCool = 2.0
 info_text = Text("press space to play", origin=(-.25,15))
 
 def update():
@@ -91,7 +92,7 @@ def update():
       if hit_info.entity == left_paddle:
         if ball.color == color.red:
           ball.color = color.white
-        if left_isUsingSkill: # 스킬 사용 시
+        if left_isUsingSkill: # 플레이어 A가 스킬 사용 시
           ball.speed += 10
           ball.color = color.red
           left_paddle.color = color.white
@@ -102,7 +103,7 @@ def update():
       elif hit_info.entity == right_paddle:
         if ball.color == color.red:
           ball.color = color.white
-        if right_isUsingSkill: # 스킬 사용 시
+        if right_isUsingSkill: # 플레이어 B가 스킬 사용 시
           ball.speed += 10
           ball.color = color.red
           right_paddle.color = color.white
@@ -138,10 +139,16 @@ def update():
 def reset():
   global isGameOver, right_isUsingSkill, left_isUsingSkill, left_skillCool, right_skillCool, skill_text, info_text
   info_text.enabled = False
-  ball.position = (0,0,0)
-  ball.rotation = (0,0,0)
+  ball.position = (0, 0, 0)
+  # 공 출발 방향 랜덤 지정
+  z = [0, 180]
+  rz = random.choice(z)
+  ball.rotation = (0, 0, rz)
   ball.speed = 10
-  ball.velocity = -1
+  if rz == 0:
+    ball.velocity = 1
+  else:
+    ball.velocity = -1
   ball.color = color.white
   for paddle in (left_paddle, right_paddle):
     paddle.color = color.white
@@ -150,8 +157,8 @@ def reset():
     paddle.y = 0
   for wall in (left_wall, right_wall):
     wall.collision = True
-  left_skillCool = 5.0
-  right_skillCool = 5.0
+  left_skillCool = 2.0
+  right_skillCool = 2.0
   left_isUsingSkill = False
   right_isUsingSkill = False
   isGameOver = False
